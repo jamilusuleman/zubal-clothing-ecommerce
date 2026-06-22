@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Checkout</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+
+</head>
+
+<body>
+
+    <div class="checkout-container">
+
+
+        <h1>
+
+            🛒 Checkout
+
+        </h1>
+
+        <p>
+
+            Please enter your delivery details below.
+
+        </p>
+
+        <form action="/place-order" method="POST">
+            <!-- 
+    <input type="text" name="name" placeholder="Your Name" required> -->
+
+            <input type="text" name="name" placeholder="Full Name" required>
+
+            <br><br>
+
+            <input type="text" name="phone" placeholder="Mobile Number" required>
+            <br><br>
+
+
+            <input type="email" name="email" placeholder="Email Address">
+
+            <br><br>
+
+
+            <textarea name="address" placeholder="Full Delivery Address" required></textarea>
+            <br><br>
+
+
+            <!-- <button type="submit" class="btn">
+
+                ✅ Place Order
+
+            </button> -->
+
+
+            <button type="submit" id="place-order-btn">
+
+                ✅ Place Order
+
+            </button>
+
+
+        </form>
+
+
+
+    </div>
+
+
+    <script>
+
+        document.querySelector(
+            "#place-order-btn"
+        ).addEventListener(
+            "click",
+            function () {
+
+                this.disabled = true;
+
+                this.innerText =
+                    "Processing Order...";
+
+                this.form.submit();
+
+            }
+        );
+
+    </script>
+</body>
+
+</html>

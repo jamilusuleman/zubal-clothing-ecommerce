@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Edit Product</title>
+</head>
+
+<body>
+
+<h1>Edit Product</h1>
+
+<form action="/update-product/{{ product.id }}"
+      method="POST"
+      enctype="multipart/form-data">
+
+
+    <input
+    type="text"
+    name="name"
+    value="{{ product.name }}"
+    required>
+
+    <br><br>
+
+    <label>Category</label>
+
+<br>
+
+<select name="category">
+
+    <option value="Native Wear"
+    {% if product.category == "Native Wear" %}
+    selected
+    {% endif %}>
+    Native Wear
+    </option>
+
+    <option value="Caps"
+    {% if product.category == "Caps" %}
+    selected
+    {% endif %}>
+    Caps
+    </option>
+
+    <option value="Watches"
+    {% if product.category == "Watches" %}
+    selected
+    {% endif %}>
+    Watches
+    </option>
+
+    <option value="Accessories"
+    {% if product.category == "Accessories" %}
+    selected
+    {% endif %}>
+    Accessories
+    </option>
+
+</select>
+
+<br><br>
+
+    <input
+    type="number"
+    name="price"
+    value="{{ product.price }}"
+
+    <br><br>
+
+<input
+    type="number"
+    name="stock"
+    value="{{ product.stock }}"
+    required>
+
+    required>
+
+    <br><br>
+
+    <textarea
+    name="description">
+
+{{ product.description }}
+
+    </textarea>
+
+    <br><br>
+
+
+<p>Current Image:</p>
+
+<label>Replace Image (Optional)</label>
+
+<br>
+
+<input
+    type="file"
+    name="image"
+    accept="image/*">
+
+<br><br>
+
+<img src="/static/uploads/{{ product.image }}"
+     width="120">
+
+<br><br>
+
+
+    <button type="submit">
+
+        Update Product
+
+    </button>
+
+</form>
+
+</body>
+
+</html>

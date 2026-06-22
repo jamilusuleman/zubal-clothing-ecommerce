@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>
+
+        {{ product.name }}
+
+    </title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+    <div class="product-details-container">
+
+
+        <div class="product-image-column">
+
+            <h1>{{ product.name }}</h1>
+
+            <p>
+
+                ⭐
+
+                {{ average_rating }}
+
+                /
+
+                5
+
+            </p>
+
+
+            <a href="/static/uploads/{{ product.image }}" target="_blank">
+
+                <img src="/static/uploads/{{ product.image }}" class="product-large-image">
+
+            </a>
+
+
+            <br><br>
+
+
+            {% if product.gallery_image %}
+
+            <a href="/static/uploads/{{ product.gallery_image }}" target="_blank">
+
+                <img src="/static/uploads/{{ product.gallery_image }}" class="gallery-thumb">
+
+            </a>
+
+            {% endif %}
+
+        </div>
+
+
+        <div class="product-info-column">
+            <p>
+
+                Price:
+
+                ₦{{ product.price }}
+
+            </p>
+
+            <p>
+
+                Category:
+
+                {{ product.category }}
+
+            </p>
+
+
+            <p>
+
+                Stock:
+
+                {{ product.stock }}
+
+            </p>
+
+
+            <p>
+
+                {{ product.description }}
+
+            </p>
+
+            <a href="/add-to-cart/{{ product.id }}">
+
+                <button>
+
+                    Add To Cart
+
+                </button>
+
+            </a>
+        </div>
+        </div>
+
+        
+        
+
+    <hr>
+
+    {% if related_products %}
+
+    <h2>You May Also Like</h2>
+
+    <div class="related-products-grid">
+
+        {% for item in related_products %}
+
+        <div class="related-card">
+
+            <h3>
+
+                <a href="/product/{{ item.id }}" class="related-link">
+
+                    {{ item.name }}
+
+                </a>
+
+            </h3>
+
+
+            <img src="/static/uploads/{{ item.image }}" class="related-image">
+
+
+
+            <p>
+
+                ₦{{ item.price }}
+
+            </p>
+
+            <a href="/product/{{ item.id }}" class="details-btn">
+
+                👁 View Details
+
+            </a>
+
+        </div>
+
+
+        {% endfor %}
+
+    </div>
+
+
+
+    {% else %}
+
+    <p>
+
+        No related products available.
+
+    </p>
+
+    {% endif %}
+
+
+    </div>
+
+</body>
+
+</html>

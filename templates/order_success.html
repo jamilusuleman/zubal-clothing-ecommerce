@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Order Successful</title>
+
+    <link rel="stylesheet"
+    href="{{ url_for('static', filename='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="success-container">
+
+    <div class="success-card">
+
+        <h1>🎉 Order Placed Successfully!</h1>
+
+        <p>
+
+            Thank you for shopping with
+            <strong>Zubal Clothing</strong>.
+
+        </p>
+
+        <p>
+
+            Your order has been received and is being processed.
+
+        </p>
+
+        <br>
+
+        <a href="{{ whatsapp_url }}" class="btn">
+
+            💬 Continue on WhatsApp
+
+        </a>
+
+        <br><br>
+
+        <a href="/shop" class="btn">
+
+            🛍 Continue Shopping
+
+        </a>
+
+    </div>
+
+</div>
+
+</body>
+
+</html>

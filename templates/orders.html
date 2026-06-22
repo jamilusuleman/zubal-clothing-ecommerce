@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Orders</title>
+
+<link rel="stylesheet"
+href="{{ url_for('static',
+filename='css/admin.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+<div class="sidebar">
+
+<h2>Zubal Admin</h2>
+
+<a href="/dashboard">Dashboard</a>
+
+<a href="/products">Products</a>
+
+<a href="/add-product">Add Product</a>
+
+<a href="/orders">Orders</a>
+
+<a href="/logout">Logout</a>
+
+</div>
+
+<div class="main">
+
+<h1>Customer Orders</h1>
+
+<table>
+
+<tr>
+
+<th>ID</th>
+<th>Name</th>
+<th>Phone</th>
+<th>Products</th>
+<th>Total</th>
+<th>Status</th>
+<th>Action</th>
+
+</tr>
+
+{% for order in orders %}
+
+<tr>
+
+<td>{{ order.id }}</td>
+
+<td>{{ order.customer_name }}</td>
+
+<td>{{ order.phone }}</td>
+
+<td>{{ order.products }}</td>
+
+<td>₦{{ order.total }}</td>
+
+
+<td>
+<!-- 
+{% if order.status == "Pending" %}
+
+<span class="status pending">
+Pending
+</span>
+
+{% else %}
+
+<span class="status delivered"> 
+Delivered
+</span>
+
+{% endif %}
+
+</td> -->
+
+
+
+
+<!-- <td>
+
+<a href="/deliver-order/{{ order.id }}"
+class="deliver-btn">
+
+    ✓ Deliver
+
+</a>
+|
+
+<a href="/delete-order/{{ order.id }}" class="delete-btn"
+onclick="return confirm('Delete this order?')">
+
+Delete
+
+</a>
+
+</td> -->
+
+<td>
+
+{% if order.status == "Pending" %}
+
+<a href="/deliver-order/{{ order.id }}"
+class="deliver-btn">
+
+✓ Deliver
+
+</a>
+
+{% else %}
+
+<span style="color:gray;">
+
+Delivered
+
+</span>
+
+{% endif %}
+
+|
+
+<a href="/delete-order/{{ order.id }}"
+class="delete-btn"
+onclick="return confirm('Delete this order?')">
+
+Delete
+
+</a>
+
+</td>
+
+
+</tr>
+
+{% endfor %}
+
+</table>
+
+</div>
+
+</div>
+
+</body>
+
+</html>

@@ -1,0 +1,145 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Product</title>
+</head>
+<body>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+
+{% if messages %}
+
+    {% for category, message in messages %}
+
+        <div class="flash-message {{ category }}">
+
+            {{ message }}
+
+        </div>
+
+    {% endfor %}
+
+{% endif %}
+
+{% endwith %}
+
+
+
+
+
+
+    <h1>Add Product</h1>
+
+    <form action="/save-product"
+          method="POST"
+          enctype="multipart/form-data">
+
+        <input
+            type="text"
+            name="name"
+            placeholder="Product Name"
+            required>
+
+        <br><br>
+
+<label>Category</label>
+
+<br>
+
+<select name="category" required>
+
+    <option value="">
+        Select Category
+    </option>
+
+    <option value="Native Wear">
+        Native Wear
+    </option>
+
+     <option value="Jallabiya">
+        Jallabiya
+    </option>
+
+    <option value="Caps">
+        Caps
+    </option>
+
+    <option value="Watches">
+        Watches
+    </option>
+
+    <option value="Accessories">
+        Accessories
+    </option>
+
+    <option value="Shoes">
+        Shoes
+    </option>
+
+</select>
+
+<br><br>
+
+        <input
+            type="number"
+            name="price"
+            placeholder="Price"
+            required>
+
+            <br><br>
+
+<input
+    type="number"
+    name="stock"
+    placeholder="Stock Quantity"
+    required>
+
+
+
+    <br><br>
+
+<label>
+
+<input
+type="checkbox"
+name="featured">
+
+Featured Product
+
+</label>
+        <br><br>
+
+        <textarea
+            name="description"
+            placeholder="Description"></textarea>
+
+        <br><br>
+
+        <input
+            type="file"
+            name="image"
+            accept="image/*"
+            required>
+
+            <br><br>
+
+<label>Gallery Image</label>
+
+<br>
+
+<input
+type="file"
+name="gallery_image"
+accept="image/*">
+
+        <br><br>
+
+        <button type="submit">
+            Save Product
+        </button>
+
+    </form>
+
+</body>
+</html>

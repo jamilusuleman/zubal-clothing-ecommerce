@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Zubal Shop</title>
+
+    <link rel="stylesheet" href="static/css/style.css">
+
+
+</head>
+
+<body>
+
+    <nav>
+
+        <div class="navbar">
+
+            <div class="logo">
+
+                ZUBAL CLOTHING
+
+            </div>
+
+            <div class="nav-links">
+
+                <a href="/shop">
+
+                    Home
+
+                </a>
+
+                <a href="/shop">
+
+                    Shop
+
+                </a>
+
+                <a href="/wishlist">
+
+                    Wishlist ({{ wishlist_count }})
+
+                </a>
+
+
+                <a href="/cart">
+
+                    🛒Cart ({{ cart_count }})
+
+                </a>
+
+                {% if session.customer_name %}
+
+                <span>
+
+                    Welcome, {{ session.customer_name }}
+
+                </span>
+
+                <a href="/customer-logout">
+
+                    Logout
+
+                </a>
+
+                {% endif %}
+
+            </div>
+
+        </div>
+
+    </nav>
+
+
+
+    <div class="hero">
+
+        <h1 class="welcocome-zubal">
+            Welcome To Zubal Clothing
+        </h1>
+
+        <p>
+            Premium Native Wears,
+            Caps And Accessories
+        </p>
+
+        <a href="#products">
+
+            <button>
+                Shop Now
+            </button>
+
+        </a>
+
+    </div>
+
+    <form method="GET" action="/shop" class="search-form">
+
+        <input type="text" name="search" placeholder="Search products">
+
+        <select name="category">
+
+            <option value="">
+                All Categories
+            </option>
+
+            <option value="Native Wear">
+                Native Wear
+            </option>
+
+            <option value="Caps">
+                Caps
+            </option>
+
+            <option value="Shoes">
+                Shoes
+            </option>
+
+            <option value="Accessories">
+                Accessories
+            </option>
+
+        </select>
+
+        <button type="submit">
+
+            Search
+
+        </button>
+
+    </form>
+
+
+    <br>
+
+
+    <h1>🔥 Featured Products</h1>
+
+    <div class="products-grid">
+
+        {% for product in featured_products %}
+
+        <div class="product-card">
+
+            <h3>
+
+                <a href="/product/{{ product.id }}">
+
+                    {{ product.name }}
+
+                </a>
+
+            </h3>
+
+            <p class="price">
+
+                ₦{{ product.price }}
+
+            </p>
+
+            <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+
+
+
+    <h1>🆕 New Arrivals</h1>
+
+    <div class="products-grid">
+
+        {% for product in new_arrivals %}
+
+        <div class="product-card">
+
+
+            <h3>
+
+                <a href="/product/{{ product.id }}">
+
+                    {{ product.name }}
+
+                </a>
+
+            </h3>
+
+
+
+            <p class="price">₦{{ product.price }}</p>
+
+            <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <hr>
+
+
+    <h2 id="products">
+
+        Our Products
+
+    </h2>
+
+
+    <div class="products-grid">
+
+        {% for product in featured_products %}
+
+        <div class="product-card">
+
+
+
+            <h3>
+
+                <a href="/product/{{ product.id }}">
+
+                    {{ product.name }}
+
+                </a>
+
+                {% if loop.index <= 3 %} <span class="badge-new">
+
+                    NEW
+
+                    </span>
+
+                    {% endif %}
+
+            </h3>
+
+
+            <p class="price">₦{{ product.price }}</p>
+
+            <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+
+    <hr>
+
+    <br><br>
+    <h1>Zubal Clothing Shop</h1>
+
+
+
+    <div class="products-grid">
+
+        {% for product in products %}
+
+
+        <div class="product-card">
+
+
+            <a href="/static/uploads/{{ product.image }}" target="_blank">
+
+                <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+            </a>
+
+
+
+            <br><br>
+
+            {% if product.gallery_image %}
+
+
+            <a href="/static/uploads/{{ product.gallery_image }}" target="_blank">
+
+                <img src="/static/uploads/{{ product.gallery_image }}" class="product-image">
+
+            </a>
+
+            {% endif %}
+
+
+            <h3>{{ product.name }}</h3>
+
+
+
+            {% if rating_stats[product.id]["count"] > 0 %}
+
+            <p>
+
+                ⭐
+
+                {{ rating_stats[product.id]["average"] }}
+
+                /
+
+                5
+
+                (
+                {{ rating_stats[product.id]["count"] }}
+                reviews
+                )
+
+            </p>
+
+            {% else %}
+
+            <p>No reviews yet</p>
+
+            {% endif %}
+
+
+
+            <p>
+                Category:
+                {{ product.category }}
+            </p>
+
+            <p class="price">
+                ₦{{ product.price }}
+            </p>
+
+            <p class="stock">
+                Stock:
+                {{ product.stock }}
+            </p>
+
+
+            <p>
+                {{ product.description }}
+            </p>
+
+
+            {% if product.stock == 0 %}
+
+            <div class="badge-out">
+
+                OUT OF STOCK
+
+            </div>
+
+            {% endif %}
+
+
+            {% if product.stock > 0 %}
+
+            <a href="/add-to-cart/{{ product.id }}" class="btn cart-btn">
+
+
+                🛒 Add To Cart
+
+            </a>
+
+            <br><br>
+
+            <a href="/add-to-wishlist/{{ product.id }}">
+
+
+                <button class="wishlist-btn">
+
+                    ❤️ Save For Later
+
+                </button>
+
+            </a>
+
+
+            <br><br>
+
+            <a href="/product/{{ product.id }}" class="details-btn">
+
+                👁 View Details
+
+            </a>
+
+
+
+            <hr>
+
+            <h4>Leave a Review</h4>
+
+            <form action="/add-review" method="POST" class="review-form">
+
+                <input type="hidden" name="product_id" value="{{ product.id }}">
+
+                <input type="text" name="customer_name" placeholder="Your Name" required>
+
+                <br><br>
+
+                <select name="rating" required>
+
+                    <option value="">Rating</option>
+
+                    <option value="5">⭐⭐⭐⭐⭐</option>
+
+                    <option value="4">⭐⭐⭐⭐</option>
+
+                    <option value="3">⭐⭐⭐</option>
+
+                    <option value="2">⭐⭐</option>
+
+                    <option value="1">⭐</option>
+
+                </select>
+
+                <br><br>
+
+                <textarea name="comment" placeholder="Write your review" required>
+</textarea>
+
+                <br><br>
+
+                <button type="submit">
+                    Submit Review
+                </button>
+
+            </form>
+
+            <hr>
+
+            <h4>Customer Reviews</h4>
+
+            {% set review_count = 0 %}
+
+            {% for review in reviews %}
+
+            {% if review.product_id == product.id %}
+            {% set review_count = review_count + 1 %}
+            {% endif %}
+
+            {% endfor %}
+
+
+            <p>
+                Total Reviews:
+                {{ review_count }}
+            </p>
+
+
+            {% for review in reviews %}
+
+            {% if review.product_id == product.id %}
+            <!-- 
+            <div style="border:1px solid #ddd;padding:10px;margin:10px 0;"> -->
+            <div class="review-card">
+
+                <strong>
+                    {{ review.customer_name }}
+                </strong>
+
+                <br>
+
+
+
+                {% if review.rating == 5 %}
+                ⭐⭐⭐⭐⭐
+
+                {% elif review.rating == 4 %}
+                ⭐⭐⭐⭐
+
+                {% elif review.rating == 3 %}
+                ⭐⭐⭐
+
+                {% elif review.rating == 2 %}
+                ⭐⭐
+
+                {% else %}
+                ⭐
+                {% endif %}
+
+                <br><br>
+
+                {{ review.comment }}
+
+            </div>
+
+            {% endif %}
+
+            {% endfor %}
+
+
+            {% else %}
+
+            <button class="out-of-stock-btn" disabled>
+
+                Out Of Stock
+
+            </button>
+
+            {% endif %}
+            
+
+        </div>
+
+        {% endfor %}
+
+
+    </div>
+
+
+    <!-- </div> -->
+
+
+
+    <footer class="footer">
+
+        <div class="footer-container">
+
+            <div class="footer-section">
+
+                <h2>Zubal Clothing</h2>
+
+                <p>
+
+                    Premium Native Wears,
+                    Caps and Fashion Accessories.
+
+                </p>
+
+            </div>
+
+
+            <div class="footer-section">
+
+                <h3>Quick Links</h3>
+
+                <a href="/shop">Home</a>
+
+                <a href="/shop">Shop</a>
+
+                <a href="/wishlist">Wishlist</a>
+
+                <a href="/cart">Cart</a>
+
+            </div>
+
+
+            <div class="footer-section">
+
+                <h3>Contact</h3>
+
+                <p>
+                    📍 Shop No. 16 IBB Mall Tunga-Minna, Niger State.
+                </p>
+
+                <p>
+
+                    Phone:
+                    +234 906 942 6528
+
+                </p>
+
+                <p>
+
+                    Email:
+                    info@zubalclothing.com
+
+                </p>
+
+            </div>
+
+        </div>
+
+        <hr>
+
+        <p class="copyright">
+
+            © 2026 Zubal Clothing.
+            All Rights Reserved.
+
+        </p>
+
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+
+    {% if toast %}
+
+    <script>
+
+        document.addEventListener("DOMContentLoaded", function () {
+
+
+            showToast("{{ toast }}");
+
+        });
+
+    </script>
+
+    {% endif %}
+
+
+</body>
+
+</html>
