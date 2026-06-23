@@ -28,19 +28,9 @@ def allowed_file(filename):
         filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
     )
 
-
-
 app = Flask(__name__)
-
-
 app.config.from_object(config.Config)
-
 app.secret_key = app.config["SECRET_KEY"]
-
-
-# app.secret_key = config.SECRET_KEY
-
-# app.config["UPLOAD_FOLDER"] = config.UPLOAD_FOLDER
 
 
 def init_db():
@@ -48,36 +38,51 @@ def init_db():
     conn = sqlite3.connect("database.db") 
     cursor = conn.cursor()
 
+
     cursor.execute("""
-CREATE TABLE IF NOT EXISTS orders (
+    CREATE TABLE IF NOT EXISTS orders (
 
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    customer_name TEXT NOT NULL,
+        customer_name TEXT NOT NULL,
 
-    phone TEXT NOT NULL,
+        phone TEXT NOT NULL,
 
-    address TEXT NOT NULL,
+        address TEXT NOT NULL,
 
-    products TEXT NOT NULL,
+        products TEXT NOT NULL,
 
-    total REAL NOT NULL
+        total REAL NOT NULL,
 
-)
-                   
+        status TEXT DEFAULT 'Pending'
 
-""")
+    )
+    """)
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS products (
+
         id INTEGER PRIMARY KEY AUTOINCREMENT,
+
         name TEXT NOT NULL,
+
+        category TEXT NOT NULL,
+
         price REAL NOT NULL,
+
         description TEXT,
+
         image TEXT,
-        gallery_image TEXT
+
+        gallery_image TEXT,
+
+        stock INTEGER DEFAULT 0,
+
+        featured INTEGER DEFAULT 0
+
     )
     """)
+
 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS reviews (
@@ -95,7 +100,6 @@ CREATE TABLE IF NOT EXISTS orders (
     )
     """)
 
-
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS customers(
 
@@ -111,7 +115,9 @@ CREATE TABLE IF NOT EXISTS orders (
     """)
 
     conn.commit()
-    conn.close()    
+    conn.close()
+
+init_db()        
 
 
 
@@ -304,9 +310,6 @@ def save_product():
     filename = f"{uuid.uuid4().hex}_{original_filename}"
 
 
-
-
-
     gallery_filename = ""
 
     if gallery_image.filename != "":
@@ -318,7 +321,6 @@ def save_product():
         gallery_filename = (
             f"{uuid.uuid4().hex}_{original_gallery}"
         )    
-
 
         gallery_image.save(
             os.path.join(
@@ -453,9 +455,6 @@ def update_product(id):
     )
 
     old_image = cursor.fetchone()[0]
-
-
-
 
 
     if image_file and image_file.filename != "":
@@ -1573,10 +1572,6 @@ def internal_server_error(error):
     return render_template(
         "500.html"
     ), 500
-
-
-
-
 
 
 
