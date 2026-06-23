@@ -32,6 +32,8 @@ app = Flask(__name__)
 app.config.from_object(config.Config)
 app.secret_key = app.config["SECRET_KEY"]
 
+os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
+
 
 def init_db():
 
