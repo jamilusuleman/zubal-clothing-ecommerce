@@ -42,7 +42,6 @@
 
                 </a>
 
-
                 <a href="/cart">
 
                     🛒Cart ({{ cart_count }})
@@ -158,7 +157,16 @@
 
             </p>
 
+
+            {% if product.image.startswith('http') %}
+
+            <img src="{{ product.image }}" class="product-image">
+
+            {% else %}
+
             <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+            {% endif %}
 
         </div>
 
@@ -193,7 +201,16 @@
 
             <p class="price">₦{{ product.price }}</p>
 
+
+            {% if product.image.startswith('http') %}
+
+            <img src="{{ product.image }}" class="product-image">
+
+            {% else %}
+
             <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+            {% endif %}
 
         </div>
 
@@ -240,7 +257,15 @@
 
             <p class="price">₦{{ product.price }}</p>
 
+            {% if product.image.startswith('http') %}
+
+            <img src="{{ product.image }}" class="product-image">
+
+            {% else %}
+
             <img src="/static/uploads/{{ product.image }}" class="product-image">
+
+            {% endif %}
 
         </div>
 
@@ -248,13 +273,10 @@
 
     </div>
 
-
     <hr>
 
     <br><br>
     <h1>Zubal Clothing Shop</h1>
-
-
 
     <div class="products-grid">
 
@@ -263,6 +285,15 @@
 
         <div class="product-card">
 
+            {% if product.image.startswith('http') %}
+
+            <a href="{{ product.image }}" target="_blank">
+
+                <img src="{{ product.image }}" class="product-image">
+
+            </a>
+
+            {% else %}
 
             <a href="/static/uploads/{{ product.image }}" target="_blank">
 
@@ -270,12 +301,24 @@
 
             </a>
 
+            {% endif %}
+
 
 
             <br><br>
 
+
             {% if product.gallery_image %}
 
+            {% if product.gallery_image.startswith('http') %}
+
+            <a href="{{ product.gallery_image }}" target="_blank">
+
+                <img src="{{ product.gallery_image }}" class="product-image">
+
+            </a>
+
+            {% else %}
 
             <a href="/static/uploads/{{ product.gallery_image }}" target="_blank">
 
@@ -285,6 +328,7 @@
 
             {% endif %}
 
+            {% endif %}
 
             <h3>{{ product.name }}</h3>
 
@@ -446,8 +490,7 @@
             {% for review in reviews %}
 
             {% if review.product_id == product.id %}
-            <!-- 
-            <div style="border:1px solid #ddd;padding:10px;margin:10px 0;"> -->
+
             <div class="review-card">
 
                 <strong>
@@ -455,8 +498,6 @@
                 </strong>
 
                 <br>
-
-
 
                 {% if review.rating == 5 %}
                 ⭐⭐⭐⭐⭐
@@ -494,7 +535,7 @@
             </button>
 
             {% endif %}
-            
+
 
         </div>
 

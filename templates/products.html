@@ -8,9 +8,6 @@
 </head>
 
 <body>
-    <!-- 
-    <div class="product-container"> -->
-
 
 
     <div class="container">
@@ -92,7 +89,15 @@
 
                         {% if product.image %}
 
+                        {% if product.image.startswith('http') %}
+
+                        <img src="{{ product.image }}" width="80">
+
+                        {% else %}
+
                         <img src="/static/uploads/{{ product.image }}" width="80">
+
+                        {% endif %}
 
                         {% else %}
 
@@ -110,11 +115,7 @@
 
                         |
 
-                        <!-- <a href="/delete-product/{{ product.id }}" onclick="return confirm(
-'Are you sure you want to delete this product?'
-)">
-                            Delete
-                        </a> -->
+
 
                         <a href="/delete-product/{{ product.id }}" onclick="return confirm(
 'Delete this product?\n\nThis action cannot be undone.'

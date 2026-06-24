@@ -35,23 +35,47 @@
             </p>
 
 
+            {% if product.image.startswith('http') %}
+
+            <a href="{{ product.image }}" target="_blank">
+
+                <img src="{{ product.image }}" class="product-large-image">
+
+            </a>
+
+            {% else %}
+
             <a href="/static/uploads/{{ product.image }}" target="_blank">
 
                 <img src="/static/uploads/{{ product.image }}" class="product-large-image">
 
             </a>
 
+            {% endif %}
+
+
 
             <br><br>
 
-
             {% if product.gallery_image %}
+
+            {% if product.gallery_image.startswith('http') %}
+
+            <a href="{{ product.gallery_image }}" target="_blank">
+
+                <img src="{{ product.gallery_image }}" class="gallery-thumb">
+
+            </a>
+
+            {% else %}
 
             <a href="/static/uploads/{{ product.gallery_image }}" target="_blank">
 
                 <img src="/static/uploads/{{ product.gallery_image }}" class="gallery-thumb">
 
             </a>
+
+            {% endif %}
 
             {% endif %}
 
@@ -101,10 +125,8 @@
 
             </a>
         </div>
-        </div>
+    </div>
 
-        
-        
 
     <hr>
 
@@ -128,10 +150,16 @@
 
             </h3>
 
+            {% if item.image.startswith('http') %}
+
+            <img src="{{ item.image }}" class="related-image">
+
+            {% else %}
+
 
             <img src="/static/uploads/{{ item.image }}" class="related-image">
 
-
+            {% endif %}
 
             <p>
 

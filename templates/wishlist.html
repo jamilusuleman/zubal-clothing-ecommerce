@@ -3,93 +3,103 @@
 
 <head>
 
-<title>
+    <title>
 
-Wishlist
+        Wishlist
 
-</title>
+    </title>
 
 </head>
 
 <body>
 
-<h1>
+    <h1>
 
-My Wishlist
+        My Wishlist
 
-</h1>
+    </h1>
 
-{% if products %}
+    {% if products %}
 
-{% for product in products %}
+    {% for product in products %}
 
-<div>
+    
+        <div>
 
-<h3>
+            {% if product.image %}
 
-{{ product.name }}
+            {% if product.image.startswith('http') %}
 
-</h3>
+            <img src="{{ product.image }}" width="120">
 
-<p>
+            {% else %}
 
-₦{{ product.price }}
+            <img src="/static/uploads/{{ product.image }}" width="120">
 
-</p>
+            {% endif %}
 
-<a href="/product/{{ product.id }}">
+            {% endif %}
 
-View Product
+            <h3>
+                {{ product.name }}
+            </h3>
 
-</a>
-
-<br><br>
-
-<a
-href="/remove-from-wishlist/{{ product.id }}">
-
-Remove
-
-</a>
-
-<hr>
-
-</div>
-
-{% endfor %}
-
-{% else %}
-
-<p>
-
-Your wishlist is empty.
-
-</p>
-
-{% endif %}
+            <p>
+                ₦{{ product.price }}
+            </p>
 
 
 
 
 
 
+            <a href="/product/{{ product.id }}">
+
+                View Product
+
+            </a>
+
+            <br><br>
+
+            <a href="/remove-from-wishlist/{{ product.id }}">
+
+                Remove
+
+            </a>
+
+            <hr>
+
+        </div>
+
+        {% endfor %}
+
+        {% else %}
+
+        <p>
+
+            Your wishlist is empty.
+
+        </p>
+
+        {% endif %}
 
 
-<script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-{% if toast %}
+        <script src="{{ url_for('static', filename='js/script.js') }}"></script>
 
-<script>
+        {% if toast %}
 
-document.addEventListener("DOMContentLoaded", function(){
+        <script>
 
-    showToast("{{ toast }}");
+            document.addEventListener("DOMContentLoaded", function () {
 
-});
+                showToast("{{ toast }}");
 
-</script>
+            });
 
-{% endif %}
+        </script>
+
+        {% endif %}
 
 
 </body>

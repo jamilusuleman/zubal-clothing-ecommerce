@@ -11,7 +11,16 @@ import os
 from werkzeug.utils import secure_filename
 import urllib.parse
 import uuid
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
+from dotenv import load_dotenv
+
+load_dotenv(dotenv_path=".env")
+
 import config
+
 
 ALLOWED_EXTENSIONS = {
     "png",
@@ -28,9 +37,22 @@ def allowed_file(filename):
         filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
     )
 
+
+
+load_dotenv(dotenv_path=".env")
+
 app = Flask(__name__)
 app.config.from_object(config.Config)
+
 app.secret_key = app.config["SECRET_KEY"]
+
+
+cloudinary.config(
+    cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
+    api_key=app.config["CLOUDINARY_API_KEY"],
+    api_secret=app.config["CLOUDINARY_API_SECRET"],
+    secure=True
+)
 
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
@@ -307,33 +329,25 @@ def save_product():
 
         return redirect("/add-product")
 
-    original_filename = secure_filename(image.filename)
 
-    filename = f"{uuid.uuid4().hex}_{original_filename}"
+    upload_result = cloudinary.uploader.upload(
+        image,
+        folder="zubal_products"
+    )
 
+    filename = upload_result["secure_url"]
 
     gallery_filename = ""
 
     if gallery_image.filename != "":
 
-        original_gallery = secure_filename(
-            gallery_image.filename
+        gallery_upload = cloudinary.uploader.upload(
+            gallery_image,
+            folder="zubal_products/gallery"
         )
 
-        gallery_filename = (
-            f"{uuid.uuid4().hex}_{original_gallery}"
-        )    
+        gallery_filename = gallery_upload["secure_url"]
 
-        gallery_image.save(
-            os.path.join(
-                app.config["UPLOAD_FOLDER"],
-                gallery_filename
-        )
-    )
-
-    image_path = os.path.join(app.config["UPLOAD_FOLDER"], filename)
-
-    image.save(image_path)
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
@@ -461,29 +475,16 @@ def update_product(id):
 
     if image_file and image_file.filename != "":
 
-        original_filename = secure_filename(
-            image_file.filename
+
+        upload_result = cloudinary.uploader.upload(
+            image_file,
+            folder="zubal_products"
         )
 
-        filename = (
-            f"{uuid.uuid4().hex}_{original_filename}"
-        )
+        filename = upload_result["secure_url"]
 
-        image_path = os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            filename
-        )
 
-        image_file.save(image_path)
 
-        old_image_path = os.path.join(
-            app.config["UPLOAD_FOLDER"],
-            old_image
-        )
-
-        if os.path.exists(old_image_path):
-
-            os.remove(old_image_path)
 
 
         cursor.execute("""
@@ -877,8 +878,6 @@ def product_details(id):
         related_products=related_products
 
     )
-
-
 
 
 # -------ADD TO CART ROIUTE----------
