@@ -7,6 +7,7 @@ from flask import (
     flash
 )
 import sqlite3
+import psycopg2
 import os
 from werkzeug.utils import secure_filename
 import urllib.parse
@@ -44,7 +45,24 @@ load_dotenv(dotenv_path=".env")
 app = Flask(__name__)
 app.config.from_object(config.Config)
 
+
+print("DATABASE_URL:", app.config["DATABASE_URL"])
+
+
 app.secret_key = app.config["SECRET_KEY"]
+
+
+def get_db_connection():
+
+    database_url = app.config["DATABASE_URL"]
+
+    if database_url:
+
+        return psycopg2.connect(database_url)
+
+    return sqlite3.connect("database.db")
+
+
 
 
 cloudinary.config(
@@ -59,7 +77,7 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 def init_db():
 
-    conn = sqlite3.connect("database.db") 
+    conn = get_db_connection() 
     cursor = conn.cursor()
 
 

@@ -23,3 +23,7 @@ class Config:
     CLOUDINARY_API_SECRET = os.environ.get(
         "CLOUDINARY_API_SECRET"
     )
+
+    DATABASE_URL = os.environ.get(
+    "DATABASE_URL"
+)
