@@ -484,9 +484,6 @@ def update_product(id):
         filename = upload_result["secure_url"]
 
 
-
-
-
         cursor.execute("""
             UPDATE products
             SET
@@ -532,8 +529,6 @@ def update_product(id):
     conn.close()
 
     return redirect("/products")
-
-
 
 
 
@@ -969,10 +964,6 @@ def remove_from_wishlist(id):
     return redirect("/wishlist")
 
 
-
-
-
-
 #------- WISH LIST ROUTE------
 
 
@@ -1214,9 +1205,9 @@ def place_order():
 
             products.append(product)
 
-            total += product[2]
+            total += float(product[3])
 
-            current_stock = product[6]
+            current_stock = int(product[7])
 
             new_stock = current_stock - 1
 
