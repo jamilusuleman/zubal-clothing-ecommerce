@@ -8,6 +8,7 @@ from flask import (
 )
 import sqlite3
 import psycopg2
+from psycopg2.extras import RealDictCursor
 import os
 from werkzeug.utils import secure_filename
 import urllib.parse
@@ -46,11 +47,14 @@ app = Flask(__name__)
 app.config.from_object(config.Config)
 
 
-print("DATABASE_URL:", app.config["DATABASE_URL"])
+# print("DATABASE_URL:", app.config["DATABASE_URL"])
 
 
 app.secret_key = app.config["SECRET_KEY"]
 
+
+
+from psycopg2.extras import RealDictCursor
 
 def get_db_connection():
 
@@ -58,9 +62,29 @@ def get_db_connection():
 
     if database_url:
 
-        return psycopg2.connect(database_url)
+        return psycopg2.connect(
+            database_url,
+            cursor_factory=RealDictCursor
+        )
 
-    return sqlite3.connect("database.db")
+    conn = sqlite3.connect("database.db")
+  
+    return conn
+
+
+
+
+
+    # database_url = app.config["DATABASE_URL"]
+
+    # print("DATABASE_URL =", database_url)
+
+    # if database_url:
+
+    #     return psycopg2.connect(database_url)
+
+    # return sqlite3.connect("database.db")
+    
 
 
 
@@ -77,84 +101,181 @@ os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 
 def init_db():
 
-    conn = get_db_connection() 
+    conn = get_db_connection()
+    is_postgres = isinstance(
+        conn,
+        psycopg2.extensions.connection
+    ) 
     cursor = conn.cursor()
 
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS orders (
+    if is_postgres:
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
 
-        customer_name TEXT NOT NULL,
+            id SERIAL PRIMARY KEY,
 
-        phone TEXT NOT NULL,
+            customer_name TEXT NOT NULL,
 
-        address TEXT NOT NULL,
+            phone TEXT NOT NULL,
 
-        products TEXT NOT NULL,
+            address TEXT NOT NULL,
 
-        total REAL NOT NULL,
+            products TEXT NOT NULL,
 
-        status TEXT DEFAULT 'Pending'
+            total REAL NOT NULL,
 
-    )
-    """)
+            status TEXT DEFAULT 'Pending'
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS products (
+        )
+        """)
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+    else:
 
-        name TEXT NOT NULL,
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS orders (
 
-        category TEXT NOT NULL,
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-        price REAL NOT NULL,
+            customer_name TEXT NOT NULL,
 
-        description TEXT,
+            phone TEXT NOT NULL,
 
-        image TEXT,
+            address TEXT NOT NULL,
 
-        gallery_image TEXT,
+            products TEXT NOT NULL,
 
-        stock INTEGER DEFAULT 0,
+            total REAL NOT NULL,
 
-        featured INTEGER DEFAULT 0
+            status TEXT DEFAULT 'Pending'
 
-    )
-    """)
+        )
+        """)
 
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS reviews (
+    if is_postgres:
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
 
-        customer_name TEXT NOT NULL,
+            id SERIAL PRIMARY KEY,
 
-        product_id INTEGER NOT NULL,
+            name TEXT NOT NULL,
 
-        rating INTEGER NOT NULL,
+            category TEXT NOT NULL,
 
-        comment TEXT NOT NULL
+            price REAL NOT NULL,
 
-    )
-    """)
+            description TEXT,
 
-    cursor.execute("""
-    CREATE TABLE IF NOT EXISTS customers(
+            image TEXT,
 
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+            gallery_image TEXT,
 
-        fullname TEXT NOT NULL,
+            stock INTEGER DEFAULT 0,
 
-        email TEXT UNIQUE NOT NULL,
+            featured INTEGER DEFAULT 0
 
-        password TEXT NOT NULL
+        )
+        """)
 
-    )
-    """)
+    else:
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS products (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            name TEXT NOT NULL,
+
+            category TEXT NOT NULL,
+
+            price REAL NOT NULL,
+
+            description TEXT,
+
+            image TEXT,
+
+            gallery_image TEXT,
+
+            stock INTEGER DEFAULT 0,
+
+            featured INTEGER DEFAULT 0
+
+        )
+        """)
+
+
+    if is_postgres:
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reviews (
+
+            id SERIAL PRIMARY KEY,
+
+            customer_name TEXT NOT NULL,
+
+            product_id INTEGER NOT NULL,
+
+            rating INTEGER NOT NULL,
+
+            comment TEXT NOT NULL
+
+        )
+        """)
+
+    else:
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS reviews (
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            customer_name TEXT NOT NULL,
+
+            product_id INTEGER NOT NULL,
+
+            rating INTEGER NOT NULL,
+
+            comment TEXT NOT NULL
+
+        )
+        """)
+
+
+    if is_postgres:
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS customers(
+
+            id SERIAL PRIMARY KEY,
+
+            fullname TEXT NOT NULL,
+
+            email TEXT UNIQUE NOT NULL,
+
+            password TEXT NOT NULL
+
+        )
+        """)
+
+    else:
+
+        cursor.execute("""
+        CREATE TABLE IF NOT EXISTS customers(
+
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+            fullname TEXT NOT NULL,
+
+            email TEXT UNIQUE NOT NULL,
+
+            password TEXT NOT NULL
+
+        )
+        """)
+
 
     conn.commit()
     conn.close()
@@ -183,54 +304,53 @@ def dashboard():
     if "user" not in session:
         return redirect("/")
 
-    conn = sqlite3.connect("database.db")
-
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
     # Total Products
     cursor.execute(
-        "SELECT COUNT(*) FROM products"
+        "SELECT COUNT(*) AS total FROM products"
     )
-    total_products = cursor.fetchone()[0]
+
+    total_products = cursor.fetchone()["total"]
 
     # Total Orders
     cursor.execute(
-        "SELECT COUNT(*) FROM orders"
+        "SELECT COUNT(*) AS total FROM orders"
     )
-    total_orders = cursor.fetchone()[0]
+
+    total_orders = cursor.fetchone()["total"]
 
     # Pending Orders
     cursor.execute(
         """
-        SELECT COUNT(*)
-        FROM orders
-        WHERE status='Pending'
-        """
+    SELECT COUNT(*) AS total
+    FROM orders
+    WHERE status='Pending'
+        """ 
     )
-    pending_orders = cursor.fetchone()[0]
+    pending_orders = cursor.fetchone()["total"]
 
     # Delivered Orders
     cursor.execute(
         """
-        SELECT COUNT(*)
+        SELECT COUNT(*) AS total
         FROM orders
         WHERE status='Delivered'
         """
     )
-    delivered_orders = cursor.fetchone()[0]
+    delivered_orders = cursor.fetchone()["total"]
 
     # Revenue
     cursor.execute(
         """
-        SELECT SUM(total)
+        SELECT SUM(total) AS revenue
         FROM orders
         WHERE status='Delivered'
         """
     )
-
-    revenue = cursor.fetchone()[0]
+    revenue = cursor.fetchone()["revenue"]
 
     if revenue is None:
         revenue = 0
@@ -246,7 +366,6 @@ def dashboard():
 
     recent_orders = cursor.fetchall()     
 
-    # conn.close()
 
     cursor.execute("""
     SELECT products, COUNT(*) as total_sales
@@ -366,24 +485,33 @@ def save_product():
 
         gallery_filename = gallery_upload["secure_url"]
 
+    conn = get_db_connection()
 
-    conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     cursor.execute("""
-        INSERT INTO products 
-                (
-                name,
-                category,
-                price,
-                description,
-                image,
-                gallery_image,
-                stock,
-                featured   
-                )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-    """, (name, category, price, description, filename, gallery_filename, stock, featured))
+        INSERT INTO products
+        (
+            name,
+            category,
+            price,
+            description,
+            image,
+            gallery_image,
+            stock,
+            featured
+        )
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+    """, (
+        name,
+        category,
+        price,
+        description,
+        filename,
+        gallery_filename,
+        stock,
+        featured
+    ))
 
     conn.commit()
     print("Saved image:", filename, gallery_filename)
@@ -403,9 +531,7 @@ def products():
 
     search = request.args.get("search", "")
 
-    conn = sqlite3.connect("database.db")
-
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
@@ -444,14 +570,14 @@ def edit_product(id):
 
         return redirect("/")
     
-    conn = sqlite3.connect("database.db")
+    
+    conn = get_db_connection()
 
-    conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM products WHERE id=?",
+        "SELECT * FROM products WHERE id=%s",
         (id,)
     )
 
@@ -477,19 +603,19 @@ def update_product(id):
     description = request.form["description"]
     print("Selected Category:", category)
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     image_file = request.files.get("image")
 
 
     cursor.execute(
-        "SELECT image FROM products WHERE id=?",
+        "SELECT image FROM products WHERE id=%s",
         (id,)
     )
 
-    old_image = cursor.fetchone()[0]
-
+    product = cursor.fetchone()
+    old_image = product["image"] if product else None
 
     if image_file and image_file.filename != "":
 
@@ -501,38 +627,37 @@ def update_product(id):
 
         filename = upload_result["secure_url"]
 
-
         cursor.execute("""
-            UPDATE products
-            SET
-                name=?,
-                category=?,
-                price=?,
-                stock=?,     
-                description=?,
-                image=?
-            WHERE id=?
-        """, (
-            name,
-            category,
-            price,
-            stock,
-            description,
-            filename,
-            id
-        ))
+        UPDATE products
+        SET
+            name=%s,
+            category=%s,
+            price=%s,
+            stock=%s,
+            description=%s,
+            image=%s
+        WHERE id=%s
+    """, (
+        name,
+        category,
+        price,
+        stock,
+        description,
+        filename,
+        id
+    ))
 
     else:
-
+        
         cursor.execute("""
             UPDATE products
             SET
-                name=?,
-                category=?,
-                price=?,
-                stock=?,       
-                description=?
-            WHERE id=?
+                name=%s,
+                category=%s,
+                price=%s,
+                stock=%s,
+                description=%s
+            WHERE id=%s
         """, (
             name,
             category,
@@ -541,7 +666,6 @@ def update_product(id):
             description,
             id
         ))
-        
 
     conn.commit()
     conn.close()
@@ -559,17 +683,15 @@ def delete_product(id):
 
         return redirect("/")    
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
 
     cursor = conn.cursor()
-
-
 
     cursor.execute(
         """
         SELECT image, gallery_image
         FROM products
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,)
     )
@@ -581,30 +703,32 @@ def delete_product(id):
 
         image_path = os.path.join(
             app.config["UPLOAD_FOLDER"],
-            product[0]
+            product["image"]
         )
+
 
         if os.path.exists(image_path):
 
             os.remove(image_path)
 
 
-        if product[1]:
+        if product["gallery_image"]:    
 
             gallery_path = os.path.join(
                 app.config["UPLOAD_FOLDER"],
-                product[1]
+                product["gallery_image"]
+
             )
+
+
+
 
             if os.path.exists(gallery_path):
 
                 os.remove(gallery_path)
 
-
-
-
     cursor.execute(
-        "DELETE FROM products WHERE id=?",
+        "DELETE FROM products WHERE id=%s",
         (id,)
     )
 
@@ -661,9 +785,9 @@ def orders():
     if "user" not in session:
         return redirect("/")
 
-    conn = sqlite3.connect("database.db")
 
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
+
 
     cursor = conn.cursor()
 
@@ -686,9 +810,8 @@ def orders():
 @app.route("/shop")
 def shop():
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
 
-    conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
 
@@ -820,14 +943,13 @@ def shop():
 @app.route("/product/<int:id>")
 def product_details(id):
 
-    conn = sqlite3.connect("database.db")
 
-    conn.row_factory = sqlite3.Row
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM products WHERE id=?",
+        "SELECT * FROM products WHERE id=%s",
         (id,)
     )
 
@@ -898,14 +1020,14 @@ def product_details(id):
 @app.route("/add-to-cart/<int:id>")
 def add_to_cart(id):
 
-    conn = sqlite3.connect("database.db")
+    
+    conn = get_db_connection()
 
-    conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM products WHERE id=?",
+        "SELECT * FROM products WHERE id=%s",
         (id,)
     )
 
@@ -993,11 +1115,8 @@ def wishlist():
         []
     )
 
-    conn = sqlite3.connect(
-        "database.db"
-    )
+    conn = get_db_connection()
 
-    conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
 
@@ -1037,14 +1156,14 @@ def wishlist():
 @app.route("/increase-quantity/<int:id>")
 def increase_quantity(id):
 
-    conn = sqlite3.connect("database.db")
+    
+    conn = get_db_connection()
 
-    conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
 
     cursor.execute(
-        "SELECT * FROM products WHERE id=?",
+        "SELECT * FROM products WHERE id=%s",
         (id,)
     )
 
@@ -1122,9 +1241,8 @@ def cart():
 
     cart_ids = session["cart"]
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
 
-    conn.row_factory = sqlite3.Row
 
     cursor = conn.cursor()
 
@@ -1133,7 +1251,7 @@ def cart():
     for product_id in cart_ids:
 
         cursor.execute(
-            "SELECT * FROM products WHERE id=?",
+            "SELECT * FROM products WHERE id=%s",
             (product_id,)
         )
 
@@ -1203,7 +1321,8 @@ def place_order():
     if not cart_ids:
         return redirect("/shop")
 
-    conn = sqlite3.connect("database.db")
+    
+    conn = get_db_connection()
     cursor = conn.cursor()
 
     products = []
@@ -1212,7 +1331,7 @@ def place_order():
     for product_id in cart_ids:
 
         cursor.execute(
-            "SELECT * FROM products WHERE id=?",
+            "SELECT * FROM products WHERE id=%s",
             (product_id,)
         )
 
@@ -1235,8 +1354,8 @@ def place_order():
             cursor.execute(
                 """
                 UPDATE products
-                SET stock=?
-                WHERE id=?
+                SET stock=%s
+                WHERE id=%s
                 """,
                 (
                     new_stock,
@@ -1302,7 +1421,7 @@ def deliver_order(id):
     if "user" not in session:
         return redirect("/")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
@@ -1330,12 +1449,12 @@ def delete_order(id):
     if "user" not in session:
         return redirect("/")
 
-    conn = sqlite3.connect("database.db")
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
     cursor.execute(
-        "DELETE FROM orders WHERE id=?",
+        "DELETE FROM orders WHERE id=%s",
         (id,)
     )
 
@@ -1364,9 +1483,8 @@ def track_order():
 
     phone = request.form["phone"]
 
-    conn = sqlite3.connect("database.db")
-
-    conn.row_factory = sqlite3.Row
+    
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
@@ -1405,7 +1523,8 @@ def add_review():
 
     comment = request.form["comment"]
 
-    conn = sqlite3.connect("database.db")
+
+    conn = get_db_connection()
 
     cursor = conn.cursor()
 
@@ -1447,10 +1566,7 @@ def register():
 
         password = request.form["password"]
 
-        conn = sqlite3.connect(
-            "database.db"
-        )
-
+        conn = get_db_connection()
         cursor = conn.cursor()
 
         cursor.execute(
@@ -1498,11 +1614,9 @@ def customer_login():
 
         password = request.form["password"]
 
-        conn = sqlite3.connect(
-            "database.db"
-        )
+    
+        conn = get_db_connection()
 
-        conn.row_factory = sqlite3.Row
 
         cursor = conn.cursor()
 
@@ -1510,8 +1624,8 @@ def customer_login():
             """
             SELECT *
             FROM customers
-            WHERE email=?
-            AND password=?
+            WHERE email=%s
+            AND password=%s
             """,
             (
                 email,
