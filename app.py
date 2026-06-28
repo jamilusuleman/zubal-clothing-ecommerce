@@ -6,8 +6,10 @@ from flask import (
     session,
     flash
 )
+from werkzeug.security import generate_password_hash, check_password_hash
 import sqlite3
 import psycopg2
+from psycopg2 import IntegrityError
 from psycopg2.extras import RealDictCursor
 import os
 from werkzeug.utils import secure_filename
@@ -47,9 +49,6 @@ app = Flask(__name__)
 app.config.from_object(config.Config)
 
 
-# print("DATABASE_URL:", app.config["DATABASE_URL"])
-
-
 app.secret_key = app.config["SECRET_KEY"]
 
 
@@ -70,23 +69,6 @@ def get_db_connection():
     conn = sqlite3.connect("database.db")
   
     return conn
-
-
-
-
-
-    # database_url = app.config["DATABASE_URL"]
-
-    # print("DATABASE_URL =", database_url)
-
-    # if database_url:
-
-    #     return psycopg2.connect(database_url)
-
-    # return sqlite3.connect("database.db")
-    
-
-
 
 
 cloudinary.config(
@@ -284,7 +266,7 @@ init_db()
 
 
 
-#------ LOGIN ROUTE-------
+#------ADMIN  LOGIN ROUTE-------
 
 @app.route("/")
 def login():
@@ -541,7 +523,7 @@ def products():
             """
             SELECT *
             FROM products
-            WHERE name LIKE ?
+            WHERE name LIKE %s
             """,
             ('%' + search + '%',)
         )
@@ -738,7 +720,7 @@ def delete_product(id):
 
     return redirect("/products")
 
-
+#-------- ADMIN LOGIN ROUTE CORRECT--------
 
 @app.route(
     "/login",
@@ -764,6 +746,9 @@ def process_login():
 
     return "Invalid Login"
 
+
+
+#-------- LOG OUT ROUTE--------
 
 @app.route("/logout")
 def logout():
@@ -832,7 +817,7 @@ def shop():
 
     if search:
 
-        query += " AND name LIKE ?"
+        query += " AND name ILIKE %s"
 
         params.append(
             "%" + search + "%"
@@ -840,7 +825,7 @@ def shop():
 
     if category:
 
-        query += " AND category=?"
+        query += " AND category=%s"
 
         params.append(category)
 
@@ -959,8 +944,8 @@ def product_details(id):
         """
         SELECT *
         FROM products
-        WHERE category=?
-        AND id != ?
+        WHERE category=%s
+        AND id != %s
         LIMIT 4
         """,
         (
@@ -975,7 +960,7 @@ def product_details(id):
         """
         SELECT *
         FROM reviews
-        WHERE product_id=?
+        WHERE product_id=%s
         """,
         (id,)
     )
@@ -1128,7 +1113,7 @@ def wishlist():
             """
             SELECT *
             FROM products
-            WHERE id=?
+            WHERE id=%s
             """,
             (product_id,)
         )
@@ -1342,9 +1327,9 @@ def place_order():
 
             products.append(product)
 
-            total += float(product[3])
+            total += float(product["price"])
 
-            current_stock = int(product[7])
+            current_stock = int(product["stock"])
 
             new_stock = current_stock - 1
 
@@ -1363,7 +1348,7 @@ def place_order():
                 )
             )        
         
-    product_names = ", ".join([p[1] for p in products])
+    product_names = ", ".join([p["name"] for p in products])
 
     cursor.execute("""
         INSERT INTO orders (
@@ -1374,7 +1359,7 @@ def place_order():
             total,
             status       
         )
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (%s, %s, %s, %s, %s, %s)
     """, (
         name,
         phone,
@@ -1429,7 +1414,7 @@ def deliver_order(id):
         """
         UPDATE orders
         SET status='Delivered'
-        WHERE id=?
+        WHERE id=%s
         """,
         (id,)
     )
@@ -1491,7 +1476,7 @@ def track_order():
     cursor.execute(
         """
         SELECT * FROM orders
-        WHERE phone=?
+        WHERE phone=%s
         ORDER BY id DESC
         LIMIT 1
         """,
@@ -1535,7 +1520,7 @@ def add_review():
         rating,
         comment
     )
-    VALUES (?, ?, ?, ?)
+    VALUES (%s, %s, %s, %s)
     """, (
         customer_name,
         product_id,
@@ -1565,33 +1550,49 @@ def register():
         email = request.form["email"]
 
         password = request.form["password"]
+        hashed_password = generate_password_hash(password)
+
 
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        cursor.execute(
-            """
-            INSERT INTO customers(
-                fullname,
-                email,
-                password
-            )
-            VALUES(?,?,?)
-            """,
-            (
-                fullname,
-                email,
-                password
-            )
-        )
+        try:
 
-        conn.commit()
+            cursor.execute(
+                """
+                INSERT INTO customers(
+                    fullname,
+                    email,
+                    password
+                )
+                VALUES(%s,%s,%s)
+                """,
+                (
+                    fullname,
+                    email,
+                    hashed_password
+
+                )
+            )
+
+            conn.commit()
+
+        except IntegrityError:
+
+            conn.rollback()
+
+            flash(
+                "This email is already registered.",
+                "error"
+            )
+
+            conn.close()
+
+            return redirect("/register")
 
         conn.close()
 
-        return redirect(
-            "/customer-login"
-        )
+        return redirect("/customer-login")
 
     return render_template(
         "register.html"
@@ -1625,31 +1626,28 @@ def customer_login():
             SELECT *
             FROM customers
             WHERE email=%s
-            AND password=%s
             """,
-            (
-                email,
-                password
-            )
+            (email,)
         )
 
         customer = cursor.fetchone()
-
         conn.close()
 
-        if customer:
 
-            session[
-                "customer_id"
-            ] = customer["id"]
+        if customer and check_password_hash(customer["password"], password):
+        
+            session["customer_id"] = customer["id"]
 
-            session[
-                "customer_name"
-            ] = customer["fullname"]
+            session["customer_name"] = customer["fullname"]
 
-            return redirect(
-                "/shop"
-            )
+            return redirect("/shop")
+        
+        flash(
+            "Invalid email or password.",
+            "error"
+        )
+
+        return redirect("/customer-login")
 
     return render_template(
         "customer_login.html"
